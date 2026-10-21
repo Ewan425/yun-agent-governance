@@ -1,0 +1,21 @@
+{
+  "memory_a": "/path/to/assistant/MEMORY.md",
+  "memory_b": "/path/to/mirror/MEMORY.md",
+  "boot_gate_script": "/path/to/tools/boot_check.py",
+  "failure_markers": ["FAIL", "GATE FAILED"],
+  "anchors": ["<literal anchor phrase that must survive every edit>"],
+  "rule_number_regex": "(?m)^(\\d+)[\\.\\s]",
+  "git_repos": [
+    {"name": "identity", "path": "/path/to/repo-identity", "min_commits": 4},
+    {"name": "tools", "path": "/path/to/repo-tools", "min_commits": 4}
+  ],
+  "playbooks_dir": "/path/to/playbooks",
+  "min_playbooks": 3,
+  "skills_dir": "/path/to/skills",
+  "max_skills": 30,
+  "ledger_script": "/path/to/tools/gap_ledger.py",
+  "ledger_report_cmd": "report",
+  "postmortem_file": "/path/to/docs/failure-modes.md",
+  "postmortem_hook_since": 1,
+  "postmortem_hook_marker": "Hooked to"
+}
