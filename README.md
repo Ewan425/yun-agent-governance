@@ -1,4 +1,4 @@
-# Yun
+# yun-agent-governance
 
 **Tools rot. Governance doesn't.**
 How one AI assistant went from *relying on good intentions* to *relying on machines* — in three months.
