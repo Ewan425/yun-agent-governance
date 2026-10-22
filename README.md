@@ -16,18 +16,21 @@ The de-identified, open-sourceable core of a **file-based personal AI assistant*
 It is positioned as an **AI engineering governance** artifact: evidence of designing, instrumenting and operating guardrails around a long-running autonomous agent. Not a security tooling repo.
 
 ### The story in one paragraph
-Phase 1 was *good intentions*: instructions like "always double-check numbers" lived in the system prompt, and worked exactly as well as willpower usually does. Phase 2 was *facilities*: tools were built to check things — and then rarely invoked. Phase 3 — the three months this repo documents — was *machines*: every repeated failure was converted into something that cannot forget: a postmortem log whose entries must hook to a mechanism, a held-out behavioral eval that must pass before any rule change ships, two git repositories where the pre-change state is committed instead of `.bak`-ed, a supply-chain scanner, and weekly automations that audit what the assistant would rather not look at. The user went from full-time QA to reading one line each Sunday: *"N new lessons, hook rate X%"*.
+Phase 1 was *good intentions*: instructions like "always double-check numbers" lived in the system prompt, and worked exactly as well as willpower usually does. Phase 2 was *facilities*: tools were built to check things — and then rarely invoked. Phase 3 — the three months this repo documents — was *machines*: every repeated failure was converted into something that cannot forget: a postmortem log whose entries must hook to a mechanism, a held-out eval gate that must pass before any rule change ships (structural checks by script, behavior by a 5-item human checklist), two git repositories where the pre-change state is committed instead of `.bak`-ed, a supply-chain scanner, and weekly automations that audit what the assistant would rather not look at. The user went from full-time QA to reading one line each Sunday: *"N new lessons, hook rate X%"*.
 
 ### What's inside
 | Path | What it is |
 |---|---|
-| `eval/runeval.py` | Held-out self-eval runner: 9 automatic behavioral checks + a 5-item manual checklist. Exit code = number of failures. Run after every non-trivial rule change; regression means fix or revert. |
+| `eval/runeval.py` | Held-out self-eval runner: 9 automatic **structural** checks (file-shape lint: mirror consistency, rule numbering, repo hygiene — not behavioral verification) + a 5-item **manual** behavior checklist. Exit code = number of failures. Run after every non-trivial rule change; regression means fix or revert. |
 | `tools/supply_chain_check.py` | Supply-chain hygiene for agent gear: pinned MCP versions, skill-count red line, auto-upgrade pattern scan. Report-only, but every check prints — silent pass is a bug. |
 | `docs/failure-modes.md` | 25 real failures, each abstracted: what happened, root cause, lesson, a self-check question, and the mechanism it hooks to. |
-| `docs/governance-playbook.md` | 14 transferable mechanisms (state-before-claims, no-silent-pass, closed-loop postmortems, held-out eval gate, …). The actual product of this repo. |
+| `docs/governance-playbook.md` | 14 mechanisms (state-before-claims, no-silent-pass, closed-loop postmortems, held-out eval gate, …). Transferable at the idea level; the scripts assume the author's layout. The actual product of this repo. |
 | `examples/runeval.config.example.json` | Example config wiring the eval runner to an assistant's files. |
 
 ### Quickstart
+
+> **Portability note:** the *mechanisms* are layout-agnostic; the *scripts* are not. `runeval.py`'s example config assumes a specific assistant layout (memory mirrors, boot gate, ledgers, postmortem files). Treat the config as a shape to adapt, not a plug-in.
+
 ```bash
 # 1. point the eval runner at your own assistant home
 cp examples/runeval.config.example.json my.config.json   # edit paths
@@ -48,16 +51,18 @@ python tools/supply_chain_check.py \
 4. **Regressions revert.** The eval suite outranks the roadmap.
 5. **The human audits the auditor.** Every claim ships with its evidence trail.
 
-### Ideas & references (all public)
-- Evaluator-gated improvement (GEPA, DSPy) — *your own eval set as the reward.*
+### Ideas & references (all public, all links)
+- Evaluator-gated improvement (GEPA, DSPy) — *your own eval set as the reward.* This repo's eval is **not** GEPA-grade: structural lint plus a human checklist, nothing more.
 - "The Postmortem That Changed Nothing", latini.dev (2026) — *"We did not fail to write the document. We failed to change the system."*
 - Checkmarx / NHI / AI Governance MCP incident reviews (2026) — supply-chain incidents and the rug-pull pattern.
-- arXiv 2608.05810 — unvetted skill accumulation degrades performance (motivates the skill red line).
-- arXiv 2603.29231 — long-horizon agent reliability: failure grows superlinearly with task length (motivates the long-task protocol).
+- [arXiv 2608.05810](https://arxiv.org/abs/2608.05810) — self-evolving agents: unvetted skill accumulation degrades performance and the damage is structurally irreversible (motivates the skill red line).
+- [arXiv 2603.29231](https://arxiv.org/abs/2603.29231) — long-horizon agent reliability decays with task duration (motivates the long-task protocol).
 - Agent Skills open standard (agentskills.io; SEP-2640, 2026-09) — portable skill packaging; "read ≠ activate" approval model.
 
 ### Disclaimer
-Personal data was scrubbed before publication: no real names, school, courses, budgets, career details or coursework content. All cases in `docs/failure-modes.md` are abstracted from real incidents. Verified state at publication: two git repos, 15 commits (9 + 6); 25 postmortem entries; 9 automatic eval cases + 5 behavior checks.
+Personal data was scrubbed before publication: no real names, school, courses, budgets, career details or coursework content. All cases in `docs/failure-modes.md` are abstracted from real incidents.
+
+**Honesty note:** nothing here has been independently reproduced. Every mechanism was verified by the author, on one assistant, in one deployment — single-operator evidence, not community validation. "Verified state" below refers to the source deployment, not this repo: two git repos, 15 commits (9 + 6); 25 postmortem entries; 9 automatic structural checks + 5 manual behavior checks.
 
 ### License
 MIT (see `LICENSE`).
@@ -72,13 +77,13 @@ MIT (see `LICENSE`).
 它的定位是 **AI 工程治理**作品：围绕一个长期运行的自治 agent 设计、埋点、运转护栏的过程证据，不是网安工具仓库。
 
 ### 一段话故事
-第一阶段靠**自觉**：「数字必须复查」这类指示躺在系统提示词里，效果跟意志力通常的效果一样。第二阶段靠**设施**：造了检查工具——然后很少被调用。第三阶段——本仓库记录的三个月——靠**机器**：每重复犯一次错，就把它改造成不会忘的东西：教训清单里每条必须挂到至少一个机制、改了规则必须先过 held-out 自评否则回滚、两个 git 仓库存"改前态"而不是 `.bak` 副本、供应链扫描器、每周自动审它不想看的地方。用户从全职质检，变成周日读一行：「本周新增 N 条、挂钩率 X%」。
+第一阶段靠**自觉**：「数字必须复查」这类指示躺在系统提示词里，效果跟意志力通常的效果一样。第二阶段靠**设施**：造了检查工具——然后很少被调用。第三阶段——本仓库记录的三个月——靠**机器**：每重复犯一次错，就把它改造成不会忘的东西：教训清单里每条必须挂到至少一个机制、改了规则必须先过 held-out 自检（脚本查结构、人查行为）否则回滚、两个 git 仓库存"改前态"而不是 `.bak` 副本、供应链扫描器、每周自动审它不想看的地方。用户从全职质检，变成周日读一行：「本周新增 N 条、挂钩率 X%」。
 
 ### 目录内容
-见上表（EN 部分）。核心产出是 `docs/governance-playbook.md`——14 条可迁移机制。
+见上表（EN 部分）。核心产出是 `docs/governance-playbook.md`——14 条机制（思路层面可迁移，脚本绑作者布局，见 Quickstart 的移植说明）。
 
 ### 快速开始
-命令见上（EN 部分）。一句话：把 `runeval.py` 指向你自己的助手目录，把扫描器指向你的装备目录。
+命令见上（EN 部分）。一句话：把 `runeval.py` 指向你自己的助手目录，把扫描器指向你的装备目录——配置是形状参考，不是即插即用。
 
 ### 设计原则
 1. **自觉不是控制。** 每条重要的规则存在两遍：一遍是文字，一遍是能跑的东西。
